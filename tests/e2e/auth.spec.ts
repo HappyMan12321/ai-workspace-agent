@@ -34,3 +34,9 @@ test("email confirmation pages suppress referrer leakage", async ({ request }) =
   expect(response.headers()["referrer-policy"]).toBe("no-referrer");
   expect(response.headers()["x-frame-options"]).toBe("DENY");
 });
+
+test("default email code links offer an explicit same-browser confirmation", async ({ page }) => {
+  await page.goto(`/auth/confirm?code=${"a".repeat(32)}&sb_flow_id=${"b".repeat(32)}`);
+  await expect(page.getByText("Use the same browser", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue securely" })).toBeDisabled();
+});

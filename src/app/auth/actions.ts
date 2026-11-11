@@ -8,7 +8,7 @@ import { appOrigin } from "@/lib/auth/origin";
 import { requireUser } from "@/lib/auth/session";
 import {
   loginSchema, signupSchema, resetRequestSchema, passwordSchema,
-  profileSchema, confirmationSchema, type AuthState,
+  profileSchema, confirmationSchema, codeConfirmationSchema, type AuthState,
 } from "@/lib/auth/validation";
 
 function invalid(error: z.ZodError): AuthState {
@@ -67,17 +67,35 @@ export async function requestPasswordReset(_previous: AuthState, form: FormData)
 }
 
 export async function confirmEmail(_previous: AuthState, form: FormData): Promise<AuthState> {
-  const parsed = confirmationSchema.safeParse(Object.fromEntries(form));
+  const input = Object.fromEntries(form);
+  const parsed = "code" in input
+    ? codeConfirmationSchema.safeParse(input)
+    : confirmationSchema.safeParse(input);
   if (!parsed.success) return { message: "This confirmation link is invalid. Request a new email." };
   const missing = unavailable();
   if (missing) return missing;
+  let recovery = false;
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp(parsed.data);
-    if (error) return { message: "This link has expired or was already used. Request a new email." };
+    if ("code" in parsed.data) {
+      // Default Supabase emails return a PKCE code. The SDK requires the verifier
+      // cookie from the browser that requested the email; URLs cannot replace it.
+      const { data, error } = await supabase.auth.exchangeCodeForSession(
+        parsed.data.code,
+        parsed.data.sb_flow_id ? { flowId: parsed.data.sb_flow_id } : undefined,
+      );
+      if (error || !data.session) return {
+        message: "This link could not be confirmed. Open it in the same browser where you requested it, or request a new email.",
+      };
+      // Recovery intent comes from the SDK's stored verifier, never query input.
+      recovery = "redirectType" in data && data.redirectType === "recovery";
+    } else {
+      const { error } = await supabase.auth.verifyOtp(parsed.data);
+      if (error) return { message: "This link has expired or was already used. Request a new email." };
+      recovery = parsed.data.type === "recovery";
+    }
   } catch { return { message: "The email could not be confirmed. Try again." }; }
-  // Fixed destinations: URL query strings never choose a redirect target.
-  redirect(parsed.data.type === "recovery" ? "/reset-password" : "/app");
+  redirect(recovery ? "/reset-password" : "/app");
 }
 
 export async function updatePassword(_previous: AuthState, form: FormData): Promise<AuthState> {

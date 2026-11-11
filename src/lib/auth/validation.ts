@@ -19,6 +19,12 @@ export const confirmationSchema = z.object({
   token_hash: z.string().regex(/^[a-fA-F0-9]{32,256}$/, "This confirmation link is invalid."),
   type: z.enum(["email", "signup", "recovery"]),
 });
+export const codeConfirmationSchema = z.object({
+  code: z.string().min(16).max(2048).regex(/^[a-zA-Z0-9_-]+$/),
+  sb_flow_id: z.string().regex(/^[a-zA-Z0-9_-]{8,64}$/).optional(),
+});
+export type ConfirmationInput = z.infer<typeof confirmationSchema> | z.infer<typeof codeConfirmationSchema>;
+
 export type AuthState = {
   message?: string;
   success?: boolean;

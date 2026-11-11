@@ -1,8 +1,9 @@
 # Supabase migrations
 
 Apply `migrations/20261110000100_phase2_auth_schema.sql` to a fresh hosted development
-project using the reviewed `supabase db push --linked` workflow in
-[Phase 2 setup](../docs/phase-2.md). No cloud migration has been applied automatically.
+project using the reviewed workflow in [Phase 2 setup](../docs/phase-2.md). The
+current development project has already received this migration via SQL Editor;
+see the guide before using CLI migration commands against that same database.
 
 All ten tables have RLS. Anonymous access is denied. Authenticated users can read
 their own rows and update only profile name / settings preference columns. Future

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(), requireUser: vi.fn(), redirect: vi.fn((path: string) => { throw new Error(`REDIRECT:${path}`); }),
   signInWithPassword: vi.fn(), signUp: vi.fn(), resetPasswordForEmail: vi.fn(),
-  verifyOtp: vi.fn(), updateUser: vi.fn(), signOut: vi.fn(), from: vi.fn(),
+  verifyOtp: vi.fn(), exchangeCodeForSession: vi.fn(), updateUser: vi.fn(), signOut: vi.fn(), from: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
@@ -81,6 +81,29 @@ describe("authentication actions", () => {
   it("redirects recovery to the fixed password page", async () => {
     mocks.verifyOtp.mockResolvedValue({ error: null });
     await expect(confirmEmail({}, form({ token_hash: "a".repeat(64), type: "recovery", next: "//attacker.example" }))).rejects.toThrow("REDIRECT:/reset-password");
+  });
+  it("exchanges default-email codes without trusting URL redirect or recovery intent", async () => {
+    mocks.exchangeCodeForSession.mockResolvedValue({ data: { session: { user: {} }, redirectType: null }, error: null });
+    await expect(confirmEmail({}, form({ code: "a".repeat(32), type: "recovery", next: "https://attacker.example" }))).rejects.toThrow("REDIRECT:/app");
+    expect(mocks.exchangeCodeForSession).toHaveBeenCalledWith("a".repeat(32), undefined);
+    expect(mocks.verifyOtp).not.toHaveBeenCalled();
+  });
+  it("routes verified PKCE recovery and passes an explicit valid flow ID", async () => {
+    mocks.exchangeCodeForSession.mockResolvedValue({ data: { session: { user: {} }, redirectType: "recovery" }, error: null });
+    await expect(confirmEmail({}, form({ code: "a".repeat(32), sb_flow_id: "b".repeat(32) }))).rejects.toThrow("REDIRECT:/reset-password");
+    expect(mocks.exchangeCodeForSession).toHaveBeenCalledWith("a".repeat(32), { flowId: "b".repeat(32) });
+  });
+  it("rejects malformed flow IDs before exchanging a code", async () => {
+    const result = await confirmEmail({}, form({ code: "a".repeat(32), sb_flow_id: "../../other" }));
+    expect(result.message).toContain("invalid");
+    expect(mocks.exchangeCodeForSession).not.toHaveBeenCalled();
+  });
+  it("reports missing-verifier or expired-code failures without exposing SDK details", async () => {
+    mocks.exchangeCodeForSession.mockResolvedValue({ data: { session: null }, error: { message: "sensitive verifier detail" } });
+    const result = await confirmEmail({}, form({ code: "a".repeat(32) }));
+    expect(result.message).toContain("same browser");
+    expect(JSON.stringify(result)).not.toContain("sensitive verifier detail");
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
   it("verifies the session before changing a password", async () => {
     mocks.updateUser.mockResolvedValue({ error: null });

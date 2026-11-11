@@ -9,8 +9,8 @@
    key. Add them to `.env.local` using the names in `.env.example`.
 3. Set `APP_URL=http://localhost:3000`. Restart `npm run dev`. Open `/` and click
    **Check connection**. HTTP 200 from `/api/health` verifies only Auth reachability.
-4. Keep production in a separate project. No Supabase account or cloud project was
-   created automatically by this delivery.
+4. Keep production in a separate project. The connected development project is
+   documented below; create another project only for a separate environment.
 
 ## 2. Apply the migration
 
@@ -21,8 +21,8 @@ project:
 npx supabase login
 npx supabase init
 npx supabase link --project-ref YOUR_DEVELOPMENT_PROJECT_REF
-npx supabase db push --linked --dry-run
-npx supabase db push --linked
+npx supabase db push --remote --dry-run
+npx supabase db push --remote
 ```
 
 The CLI may request your database password. Enter it in the local terminal prompt,
@@ -57,7 +57,7 @@ permission error by granting unrestricted writes or adding a service-role key.
 Optional post-migration type generation for later development:
 
 ```sh
-npx supabase gen types typescript --linked > src/lib/database.generated.ts
+npx supabase gen types typescript --remote > src/lib/database.generated.ts
 ```
 
 ## 3. Configure email/password Auth
@@ -74,27 +74,44 @@ In Supabase Authentication:
    the built-in development mail service has delivery restrictions. The app uses
    Supabase Auth's protections and introduces no in-memory rate limiter.
 
-Update **Confirm signup** email to include this link:
+### Default emails (no custom SMTP required)
+
+Keep Supabase's default signup and password-reset templates. They return a PKCE
+`code` to `/auth/confirm`. The app shows **Continue securely** and exchanges that
+code server-side using the verifier cookie stored when the email was requested.
+If an `sb_flow_id` is included, it is validated and passed to the SDK. Recovery
+intent comes from the SDK's stored verifier rather than a caller-supplied type.
+
+Open the email link in the **same browser** where you signed up/requested recovery.
+When using the in-app browser, copy the email link into a new tab in that same
+browser instead of opening it in Chrome/Safari. A different browser has no verifier
+cookie and cannot finish the exchange. Do not paste email tokens into chat.
+
+The project dashboard currently requires custom SMTP or Pro to edit templates.
+No paid upgrade or SMTP sender was configured. Built-in mail has rate and recipient
+restrictions; start with the email associated with your Supabase organization.
+The dashboard's default verification URL can be visited by email scanners before
+reaching the app; the app itself does not exchange the resulting code on a GET.
+
+### Optional custom templates
+
+If you later configure SMTP or otherwise gain template editing, token-hash links
+remain supported. For **Confirm signup**:
 
 ```html
 <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">Confirm your account</a>
 ```
 
-Update **Reset password** email to include:
+For **Reset password**:
 
 ```html
 <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery">Reset your password</a>
 ```
 
-The app supplies `${APP_URL}/auth/confirm` as RedirectTo in both requests. Use
-those templates with app-initiated sign-up/recovery flows. Generic dashboard invites
-and OAuth are not implemented. Existing default templates which return a token in
-a URL fragment are incompatible with the server-only confirmation page.
-
-The page displays **Continue securely**. Only submitting that form calls `verifyOtp`
-and sets the session cookies. Mail scanners merely opening the link do not consume
-the token. Recovery redirects to `/reset-password`; ordinary confirmation redirects
-to `/app`. A valid signed-in user may also change their password at
+The app supplies `${APP_URL}/auth/confirm` as RedirectTo for both requests. These
+links reach the app directly, and only clicking **Continue securely** consumes the
+one-time token. Generic dashboard invites, OAuth, and implicit fragment-token
+callbacks are not implemented. A verified user can change their password at
 `/reset-password`. Sign-out ends the current device's session, not all devices.
 
 For production, replace localhost with the deployed HTTPS origin in `APP_URL`, Site
@@ -133,7 +150,38 @@ Implemented: server-validated account flows, protected pages/mutations, cookie
 sessions, account/profile UI, database migration with ownership constraints and RLS,
 and automated validation/authorization/database/browser checks.
 
-Live integration awaits a user-created Supabase project. Chat, OpenAI, execution,
+The hosted database and connection are verified; real account/email tests remain
+pending user signup. Chat, OpenAI, execution,
 Storage, tasks, approval actions, audit-history UI, Realtime and deployment remain
 subsequent phases. Phase 3 should begin only after these account flows have been
 verified with the development project.
+
+## Connected development project — November 10, 2026
+
+- Project: `ai-workspace-agent-dev`, Free organization, West US (North California).
+- Reference: `sadzijzrmzsjdonkvrbd`.
+- Project URL: `https://sadzijzrmzsjdonkvrbd.supabase.co`.
+- Connection settings are in ignored local `.env.local`; no credentials were committed.
+- The exact version-controlled Phase 2 SQL migration was applied via the dashboard
+  SQL Editor after confirming there were no existing public application tables.
+- All ten hosted tables have RLS; catalog checks confirmed anonymous SELECT denial,
+  authenticated SELECT grants and owner policies. A direct anonymous profiles API
+  request was rejected with HTTP 401 / PostgreSQL code `42501`.
+- Local `/api/health` returned HTTP 200 with `auth_reachable`.
+- Site URL is `http://localhost:3000`; the only redirect allowlist entry is
+  `http://localhost:3000/auth/confirm`. Email signup and confirmation are enabled;
+  minimum password length is 12. Default email templates remain in use.
+
+Because SQL Editor applies SQL without recording CLI migration history, do not
+push the initial migration to this same database again. Once you log in/link the
+CLI, mark this already-applied version before using CLI migrations:
+
+```sh
+npx supabase migration repair 20261110000100 --status applied --remote
+npx supabase migration list --remote
+npx supabase db push --remote --dry-run
+```
+
+Only repair history after independently confirming the schema matches the migration;
+it does not execute or validate SQL. Fresh environments should apply the migration
+normally. No production deployment or real user account test has been completed.

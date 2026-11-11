@@ -69,7 +69,9 @@ There is no general write or delete permission that bypasses those future contro
 
 Confirmation targets are fixed: account confirmation goes to `/app`, recovery to
 `/reset-password`. Redirect query parameters are ignored. Confirmation uses a form
-so fetching a link alone does not consume its one-time token. Auth errors are
+so the app exchanges a code or verifies a token only after an explicit POST. Default
+Supabase emails use PKCE and require the browser that requested the email; the SDK
+checks its verifier cookie. Custom token-hash templates are also supported. Auth errors are
 sanitized; reset messages do not disclose whether an email is registered. Email
 origins come only from validated `APP_URL`. Server actions use Next.js origin checks
 and a 32KB body limit. Referrer suppression protects email-link query strings.
@@ -96,8 +98,9 @@ alter a real account. It checks setup behavior, account-page navigation, private
 route redirects and confirmation-link guards. Auth unit tests mock only Supabase
 network calls; database ownership tests execute SQL in PostgreSQL.
 
-[Verification results](VERIFICATION.md) distinguish passed checks from the live
-checks still awaiting a Supabase development project.
+[Verification results](VERIFICATION.md) distinguish passed checks from pending
+account/email checks. The development Supabase project is now connected and the
+Phase 2 migration has been applied; see the project status in the setup guide.
 
 ## Deployment target and phase boundary
 
