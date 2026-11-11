@@ -150,8 +150,9 @@ Implemented: server-validated account flows, protected pages/mutations, cookie
 sessions, account/profile UI, database migration with ownership constraints and RLS,
 and automated validation/authorization/database/browser checks.
 
-The hosted database and connection are verified; real account/email tests remain
-pending user signup. Chat, OpenAI, execution,
+The hosted database, account confirmation, authenticated workspace and profile
+persistence after refresh are verified. Additional live checks are recorded in
+`VERIFICATION.md`. Chat, OpenAI, execution,
 Storage, tasks, approval actions, audit-history UI, Realtime and deployment remain
 subsequent phases. Phase 3 should begin only after these account flows have been
 verified with the development project.
@@ -184,4 +185,8 @@ npx supabase db push --remote --dry-run
 
 Only repair history after independently confirming the schema matches the migration;
 it does not execute or validate SQL. Fresh environments should apply the migration
-normally. No production deployment or real user account test has been completed.
+normally. A real user has now completed signup/email confirmation; the authenticated
+workspace and saved profile survived a full browser refresh. An independent request
+without session cookies was redirected to login. No password or session token was
+recorded. Recovery, expired-token refresh and a second hosted account remain manual
+checks; no production deployment has been performed.

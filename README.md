@@ -99,8 +99,9 @@ route redirects and confirmation-link guards. Auth unit tests mock only Supabase
 network calls; database ownership tests execute SQL in PostgreSQL.
 
 [Verification results](VERIFICATION.md) distinguish passed checks from pending
-account/email checks. The development Supabase project is now connected and the
-Phase 2 migration has been applied; see the project status in the setup guide.
+additional account checks. The development project is connected, the migration is
+applied, and real account confirmation plus profile persistence after refresh are
+verified; see the project status in the setup guide.
 
 ## Deployment target and phase boundary
 

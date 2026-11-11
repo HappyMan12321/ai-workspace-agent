@@ -43,11 +43,21 @@ PKCE callbacks. Tests cover code exchange, explicit flow IDs, recovery intent fr
 the SDK verifier, rejected external redirect input and sanitized missing-verifier
 errors. Custom token-hash templates remain supported. No paid service was enabled.
 
-User signup, real email delivery, password recovery, real session refresh and
-profile persistence through an authenticated hosted account still require the
-user's account-creation step. No production deployment was performed. SQL Editor
-application does not record CLI history; see the setup guide's history-repair
-instructions before pushing subsequent migrations to this same database.
+The user completed account creation and email confirmation. The private workspace
+loaded with the verified account, profile and default preferences. A profile save
+success was visible; after a full page reload, the saved name remained and the user
+was still authenticated. No password or session token was read or recorded.
+
+An independent HTTP request without browser cookies to the configured `/app`
+returned HTTP 307 to `/login?notice=session` with `Cache-Control: no-store`.
+This confirms the running connected app still rejects unauthenticated access.
+
+Remaining live checks: a fresh password login/logout cycle, password-recovery email
+and update, refresh after token expiry, and two-account isolation through the hosted
+API. Isolation remains covered by the PostgreSQL test suite and hosted policy/grant
+inspection. No production deployment was performed. SQL Editor application does not
+record CLI history; see the setup guide before pushing subsequent migrations to
+this same database.
 
 ## Phase 1 baseline
 
