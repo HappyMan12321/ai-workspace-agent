@@ -116,11 +116,17 @@ export function ChatWorkspace({ conversationId, conversations, messages, runs, c
           <label htmlFor="chat-message" className="sr-only">Your message</label>
           <div className="flex items-end gap-3 rounded-2xl border border-border bg-white p-3 shadow-sm focus-within:border-primary">
             <textarea id="chat-message" value={content} onChange={event => setContent(event.target.value)} maxLength={4000} rows={3} placeholder="What would you like to work on?" disabled={disabled}
-              onKeyDown={event => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); form.current?.requestSubmit(); } }}
+              aria-describedby="chat-keyboard-hint"
+              onKeyDown={event => {
+                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) {
+                  event.preventDefault();
+                  if (!event.repeat && !disabled && content.trim()) form.current?.requestSubmit();
+                }
+              }}
               className="min-w-0 flex-1 resize-y border-0 bg-transparent px-1 py-1 text-sm leading-6 outline-none disabled:opacity-50" />
             <Button type="submit" size="icon" aria-label="Send message" disabled={disabled || !content.trim()}><ArrowUp size={18} aria-hidden /></Button>
           </div>
-          <p className="text-center text-xs leading-5 text-slate-500">Conversations are saved. File and task actions arrive in the next phase.</p>
+          <p id="chat-keyboard-hint" className="text-center text-xs leading-5 text-slate-500">Enter to send · Shift+Enter for a new line. Conversations are saved.</p>
         </form>
       </footer>
     </section>
