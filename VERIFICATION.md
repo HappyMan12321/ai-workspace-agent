@@ -67,3 +67,30 @@ build and mobile smoke check. Those tests remain in the current passing suite.
 
 The delivered application never uses PGlite or local files for persistent data.
 PGlite is only a development dependency for executable PostgreSQL tests.
+
+## Phase 3 — November 10, 2026
+
+- ESLint and TypeScript: passed.
+- Vitest: 64 tests across 8 files passed. Includes 20 PostgreSQL security tests
+  covering both migrations, ownership, idempotency, rate limits, expiry recovery,
+  terminal states and isolation of chat writes from agent/tool/approval records.
+- Production build: passed with the authenticated chat routes and server-only SDK.
+- Playwright: 9 tests passed with OpenAI disabled and isolated empty Supabase settings.
+- Hosted Phase 3 migration applied successfully to development via SQL Editor.
+- Hosted catalog: all six public/private chat functions have anonymous execution
+  denied; public wrappers are invoker functions, private implementations are definer
+  functions. Authenticated grants match the owner-scoped implementation.
+- Development logging adjusted to omit auth callback URLs and server-action inputs.
+
+OpenAI API key configuration and a real model call are pending. Provider integration
+was tested with mocked SDK calls only; no model usage or billing has been verified.
+The connected authenticated chat page loaded with its conversation UI and no
+database setup error. Its composer correctly remains disabled without an API key.
+The screenshot was inspected and no horizontal overflow was detected. Production
+dependency audit reported zero advisories.
+Phase 3's configured per-user request caps do not constitute an aggregate monetary
+spending cap. No service-role credential or user OpenAI key has been committed.
+
+This phase does not implement tool execution, storage/task actions, approvals,
+Realtime, a durable worker or production deployment. Conversations remain untrusted
+text; chat RPCs do not prove that an external operation or model call occurred.

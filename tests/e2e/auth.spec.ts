@@ -13,7 +13,7 @@ test("account screens are available and explain missing setup", async ({ page })
 });
 
 test("private pages reject unauthenticated access", async ({ page }) => {
-  for (const path of ["/app", "/reset-password"]) {
+  for (const path of ["/app", "/reset-password", "/app/chat"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login\?notice=setup$/);
     await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();

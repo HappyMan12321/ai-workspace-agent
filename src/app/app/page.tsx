@@ -24,6 +24,7 @@ export default async function Workspace({ searchParams }: { searchParams: Promis
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your account</p>
       <h1 className="text-3xl font-semibold tracking-tight">Welcome to your workspace.</h1>
       <p className="mt-3 text-sm text-slate-600">Signed in as {user.email}</p>
+      <Button asChild className="mt-6"><Link href="/app/chat">Open workspace chat</Link></Button>
       {notice === "password_updated" && <p role="status" className="mt-6 rounded-xl bg-green-50 p-4 text-sm text-green-900">Your password has been updated.</p>}
       {notice === "logout_failed" && <p role="alert" className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-800">Sign-out could not finish. Please try again.</p>}
       <div className="mt-8 grid gap-6 md:grid-cols-2">

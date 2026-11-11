@@ -12,7 +12,7 @@ export default async function Home() {
   return <main className="mx-auto max-w-6xl px-6 py-8 md:py-12">
     <header className="flex items-center justify-between gap-4 border-b border-border pb-6">
       <div className="flex items-center gap-3"><span className="rounded-xl bg-primary p-2.5 text-white"><Layers3 size={22} aria-hidden /></span><span className="font-semibold tracking-tight">AI Workspace Agent</span></div>
-      <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium">Phase 02 / 08</span>
+      <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium">Phase 03 / 08</span>
     </header>
     <div className="grid gap-12 py-12 md:grid-cols-[1fr_280px]">
       <section className="space-y-8">
@@ -26,8 +26,8 @@ export default async function Home() {
         <div className="grid gap-4 sm:grid-cols-3">{[["Next.js", "App Router + TypeScript"], ["Supabase", "Auth, PostgreSQL & Storage"], ["Vercel", "Deployment target"]].map(([title, detail]) => <div key={title} className="rounded-xl border border-border p-4"><h2 className="mb-2 text-sm font-semibold">{title}</h2><p className="text-xs leading-5 text-slate-600">{detail}</p></div>)}</div>
         <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-primary underline underline-offset-4">Open Supabase dashboard <ArrowUpRight size={16} aria-hidden /></a>
       </section>
-      <aside className="rounded-2xl border border-border bg-white p-6 self-start"><h2 className="mb-6 font-semibold">Build roadmap</h2><ol className="space-y-5">{phases.map((phase, i) => <li key={phase} className="flex items-start gap-3">{i <= 1 ? <CheckCircle2 className="mt-0.5 shrink-0 text-primary" size={17} aria-hidden /> : <Circle className="mt-0.5 shrink-0 text-slate-300" size={17} aria-hidden />}<div><p className={`text-sm ${i <= 1 ? "font-semibold" : "text-slate-500"}`}>{phase}</p><p className="mt-1 text-xs text-slate-400">{i <= 1 ? "Implemented · live setup pending" : `Phase ${i + 1} · upcoming`}</p></div></li>)}</ol></aside>
+      <aside className="rounded-2xl border border-border bg-white p-6 self-start"><h2 className="mb-6 font-semibold">Build roadmap</h2><ol className="space-y-5">{phases.map((phase, i) => <li key={phase} className="flex items-start gap-3">{i <= 2 ? <CheckCircle2 className="mt-0.5 shrink-0 text-primary" size={17} aria-hidden /> : <Circle className="mt-0.5 shrink-0 text-slate-300" size={17} aria-hidden />}<div><p className={`text-sm ${i <= 2 ? "font-semibold" : "text-slate-500"}`}>{phase}</p><p className="mt-1 text-xs text-slate-400">{i <= 2 ? "Implemented · live setup pending" : `Phase ${i + 1} · upcoming`}</p></div></li>)}</ol></aside>
     </div>
-    <footer className="border-t border-border pt-5 text-xs leading-6 text-slate-500">Phase 2 foundation. Authentication and ownership schema implemented. Agent tools, files, approvals, and deployment arrive in subsequent phases.</footer>
+    <footer className="border-t border-border pt-5 text-xs leading-6 text-slate-500">Phase 3 foundation. Accounts, persistent chat, and OpenAI integration implemented. Tools, files, approvals, and deployment arrive in subsequent phases.</footer>
   </main>;
 }

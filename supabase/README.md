@@ -5,6 +5,11 @@ project using the reviewed workflow in [Phase 2 setup](../docs/phase-2.md). The
 current development project has already received this migration via SQL Editor;
 see the guide before using CLI migration commands against that same database.
 
+Phase 3 migration `20261110000200_phase3_chat.sql` is also applied to development.
+It exposes owner-scoped chat RPCs with durable limits and idempotency; there are no
+general write grants. Chat content is not execution/approval authority. See
+[Phase 3 setup](../docs/phase-3.md) for the exact boundary and CLI history repair.
+
 All ten tables have RLS. Anonymous access is denied. Authenticated users can read
 their own rows and update only profile name / settings preference columns. Future
 workflow tables are read-only until later phases introduce narrowly scoped write

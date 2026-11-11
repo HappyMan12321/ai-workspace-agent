@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  logging: {
+    serverFunctions: false,
+    incomingRequests: { ignore: [/\/auth\/confirm(?:\?|$)/] },
+  },
   experimental: { serverActions: { bodySizeLimit: "32kb" } },
   async headers() {
     return [{ source: "/:path*", headers: [

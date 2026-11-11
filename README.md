@@ -1,8 +1,9 @@
 # AI Workspace Agent
 
 Next.js App Router + TypeScript, Supabase, Tailwind CSS and shadcn/ui.
-**Phases 1–2 are implemented.** This is an account and database foundation, not yet
-an operational agent. OpenAI integration begins in Phase 3.
+**Phases 1–3 are implemented.** Accounts, database ownership and persistent OpenAI
+text chat are available. Tool execution remains Phase 4. See [chat setup](docs/phase-3.md)
+for server-side API configuration and verification.
 
 ## Run locally
 
@@ -26,8 +27,8 @@ APP_URL=http://localhost:3000
 ```
 
 Use a real `sb_publishable_…` key. Legacy JWT, secret and service-role keys are
-rejected in public configuration. No service-role or OpenAI key is required for
-Phase 2. `.env.local` is ignored by Git; never put credentials in source or chat.
+rejected in public configuration. No service-role key is required. Phase 3 chat requires a server-only
+`OPENAI_API_KEY` and `OPENAI_MODEL=gpt-6-luna`. `.env.local` is ignored by Git; never put credentials in source or chat.
 Restart the server after changing settings. Public variables are embedded at build
 time, so Vercel environment changes require a new build/deployment.
 
@@ -44,11 +45,14 @@ time, so Vercel environment changes require a new build/deployment.
 - One migration creating all ten requested tables, RLS, owner-scoped read policies,
   column-specific profile/preferences updates, composite ownership foreign keys,
   indexes, and automatic profile/settings provisioning for Auth users.
+- Bounded OpenAI text chat with saved conversations, idempotency, durable rate
+  limits and explicit partial/failed/timeout status. No automatic model-call retries.
 - Vitest, in-memory PostgreSQL security tests, and Playwright browser checks.
 
-Future agent, file, task and approval tables are deliberately read-only to the
-`authenticated` role at this stage. Later migrations must add narrowly scoped
-operations together with authorization, validation, approval, and audit behavior.
+General writes to agent/file/task/approval tables remain denied. Phase 3 introduces
+only owner-scoped chat RPCs; these cannot authorize tools or alter agent-kind runs.
+Later migrations must add narrowly scoped operations together with authorization,
+validation, approval and audit behavior.
 There is no general write or delete permission that bypasses those future controls.
 
 ## Routes and code
@@ -60,6 +64,8 @@ There is no general write or delete permission that bypasses those future contro
 | `/forgot-password`, `/reset-password` | Request recovery and update password |
 | `/auth/confirm` | Validate email-link details; confirm with an explicit POST |
 | `/app` | Verified account, profile update and logout |
+| `/app/chat`, `/app/chat/:id` | Persistent conversation interface |
+| `/api/chat` | Authenticated, bounded OpenAI chat request |
 | `/api/health` | Auth settings connectivity; does not verify data/storage readiness |
 | `src/app/auth/actions.ts` | Validated authentication and profile server actions |
 | `src/lib/auth/` | Input schemas, verified-user guard, canonical email origin |
@@ -111,7 +117,7 @@ corresponding Vercel environments; keep `APP_URL` server-side. Use supported Web
 build/dev scripts and Tailwind PostCSS. Deployment and deployed-domain checks remain
 Phase 8 work; no deployment has been performed.
 
-The remaining phases are chat/OpenAI (3), execution engine (4), Storage/task tools
+The remaining phases are execution engine (4), Storage/task tools
 (5), approvals/audit/Realtime (6), complete dashboard (7), and deployed demonstration
 (8). Schema columns anticipate these phases; they do not implement their behavior.
 
