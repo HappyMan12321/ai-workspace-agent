@@ -1,16 +1,20 @@
-# Database boundary
+# Supabase migrations
 
-Version-controlled application migrations begin in Phase 2. No tables, buckets,
-policies or Realtime publications are created in Phase 1. Do not create user-owned
-tables without RLS. Storage setup and policies arrive in Phase 5.
+Apply `migrations/20261110000100_phase2_auth_schema.sql` to a fresh hosted development
+project using the reviewed `supabase db push --linked` workflow in
+[Phase 2 setup](../docs/phase-2.md). No cloud migration has been applied automatically.
 
-For a hosted development project, install the Supabase CLI, log in, and link:
+All ten tables have RLS. Anonymous access is denied. Authenticated users can read
+their own rows and update only profile name / settings preference columns. Future
+workflow tables are read-only until later phases introduce narrowly scoped write
+operations with authorization, validation, approvals and audit behavior.
 
-```sh
-npx supabase login
-npx supabase init
-npx supabase link --project-ref YOUR_DEVELOPMENT_PROJECT_REF
-```
+Security-definer provisioning runs in a private schema with a pinned empty search
+path and revoked public execution. Ownership is based on `auth.uid()` and foreign
+keys, never display metadata. The migration provisions profiles/settings for new
+and existing Auth accounts.
 
-Run these from the application directory when beginning Phase 2. Review migrations
-before `npx supabase db push`. Never push development changes directly to production.
+`tests/database/ownership.test.ts` applies this exact migration to test-only,
+in-memory PostgreSQL and exercises grants, RLS, triggers and ownership constraints.
+It does not substitute for a hosted Supabase integration check. Storage buckets and
+Realtime publications are intentionally not created in Phase 2.

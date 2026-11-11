@@ -1,29 +1,38 @@
-# Phase 1 verification — November 6, 2026
+# Verification — November 10, 2026
 
-- Node.js 24.20.0, Next.js 16.4.5, React 19.3.0.
-- ESLint: passed with no warnings after final PostCSS configuration cleanup.
+## Phase 2 automated checks
+
+- ESLint: passed without warnings.
 - TypeScript and Next.js route generation: passed.
-- Vitest: 7 tests passed across configuration and health endpoint behavior.
-- Production build: passed using Next.js Webpack and Tailwind PostCSS.
-- Playwright Chromium: 2 tests passed against an isolated development server.
-- Built application smoke check: home returned HTTP 200; unconfigured health returned
-  the expected uncached HTTP 503; the connection button displayed setup guidance.
-- Production UI screenshot inspected; a 390px viewport had no horizontal overflow.
+- Vitest: 36 tests passed across 5 files.
+- PostgreSQL security suite: 10 tests passed using the exact migration in test-only,
+  in-memory PGlite. Tested all ten tables for RLS and cross-user visibility, anonymous
+  denial, profile/settings provisioning and backfill, allowed column updates,
+  ownership reassignment denial, direct approval/audit write denial, composite
+  foreign keys, idempotency, object keys, traversal and file-size constraints.
+- Auth unit checks: validation, server-verified sessions, safe email origins, signup,
+  recovery, expired tokens, fixed redirects, profile ownership and logout outcomes.
+- Next.js production build: passed using Webpack and Tailwind PostCSS. All private
+  routes are dynamic, including builds without configured Supabase credentials.
+- Playwright Chromium: 6 tests passed. Covered setup, account navigation, private
+  route redirects, confirmation link validation and referrer protection.
+- Production browser smoke check: account screens returned HTTP 200; private pages
+  redirected to login without configuration. No horizontal overflow at 390px.
+- Production login screenshot inspected: `../phase2-preview.png`.
+- Production dependency audit: 0 advisories. Installation reported 7 moderate
+  development-tool advisories; no forced tooling downgrade was performed.
 
-No live Supabase credentials were available. Successful Auth connectivity, session
-refresh with an actual account, RLS, PostgreSQL persistence, Storage, Realtime,
-OpenAI, and Vercel deployment were not verified. Later phases implement most of
-those features. No cloud resources were created or modified.
+No Supabase development project exists yet. No cloud project, migration, storage
+bucket, production deployment, or real account was created or modified. Hosted
+sign-up/login, SMTP delivery, token refresh with real sessions, password recovery,
+and profile persistence through the hosted API remain unverified. Follow
+`docs/phase-2.md` to configure a development project and complete those checks.
 
-The original Turbopack build could not open a helper-process port in this execution
-environment. The delivered scripts use the supported Webpack alternative and
-build successfully. Browser checks emitted a non-failing development-server stream
-message during test teardown; the production smoke check completed successfully.
+## Phase 1 baseline
 
-Dependency audit: no production dependency advisories were reported. The full
-install reported 8 moderate development-tool advisories tracing to minimatch in
-TypeScript ESLint tooling. npm suggested downgrading eslint-config-next across a
-major version; that change was not applied. Review updated compatible tooling
-before production release; do not run npm audit fix --force indiscriminately.
+The initial setup, read-only health probe, environment validation and cookie client
+foundation were previously verified with 7 unit and 2 browser tests, a production
+build and mobile smoke check. Those tests remain in the current passing suite.
 
-Run the verification commands in README.md after supplying project settings.
+The delivered application never uses PGlite or local files for persistent data.
+PGlite is only a development dependency for executable PostgreSQL tests.

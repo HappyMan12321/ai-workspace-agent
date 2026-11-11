@@ -1,9 +1,10 @@
-# AI Workspace Agent — Phase 1
+# AI Workspace Agent
 
-A Next.js App Router + TypeScript foundation targeting Vercel, with Tailwind CSS,
-shadcn/ui, Zod, and browser/server Supabase clients. Only Phase 1 is implemented.
+Next.js App Router + TypeScript, Supabase, Tailwind CSS and shadcn/ui.
+**Phases 1–2 are implemented.** This is an account and database foundation, not yet
+an operational agent. OpenAI integration begins in Phase 3.
 
-## Start locally
+## Run locally
 
 Use Node.js 24 and npm. From this directory:
 
@@ -13,68 +14,67 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. Without Supabase settings, the setup screen still loads
-and the connection check reports configuration is required. This is intentional;
-configuration presence is never presented as a verified live connection.
+Open http://localhost:3000. The setup and account pages load without Supabase;
+account submission remains disabled until configuration is present. See
+[Phase 2 setup](docs/phase-2.md) for creating a hosted project, applying the schema,
+configuring confirmation emails, and verifying sign-in.
 
-## Configure a hosted Supabase development project
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+APP_URL=http://localhost:3000
+```
 
-1. Create a project at https://supabase.com/dashboard. Keep development and production
-   in separate projects. Save the database password securely; the app does not need it.
-2. In the project's Connect dialog/API settings, copy the project HTTPS URL and
-   **publishable key** (`sb_publishable_…`). This starter deliberately rejects secret,
-   service-role and legacy JWT keys in its public configuration.
-3. Set these values in `.env.local`:
+Use a real `sb_publishable_…` key. Legacy JWT, secret and service-role keys are
+rejected in public configuration. No service-role or OpenAI key is required for
+Phase 2. `.env.local` is ignored by Git; never put credentials in source or chat.
+Restart the server after changing settings. Public variables are embedded at build
+time, so Vercel environment changes require a new build/deployment.
 
-   ```dotenv
-   NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
-   APP_URL=http://localhost:3000
-   ```
+## What works
 
-4. Restart the development server; Next.js embeds public values when it builds.
-5. Click **Check connection**. A success means the Supabase Auth settings endpoint
-   accepted the key. It does **not** verify database tables, RLS, storage, sign-in,
-   or Realtime; those are not implemented yet.
-6. In Supabase Auth URL Configuration, set the development Site URL to
-   `http://localhost:3000`. In Phase 2, allow the exact callback/reset URLs implemented
-   there. Callback and password-reset routes do not exist in Phase 1.
+- Responsive setup screen and an on-demand, read-only Auth connectivity probe.
+- Email/password sign-up and sign-in, email confirmation, password recovery,
+  password updates, and device-local logout using server actions.
+- Cookie-based browser/server Supabase clients and verified session refresh.
+- Protected `/app` and `/reset-password` pages, with independent server-side user
+  verification in mutations. No client-supplied user ID grants authority.
+- A minimal account screen that reads the profile and settings and saves a name
+  through the caller's session; refreshing reloads PostgreSQL data.
+- One migration creating all ten requested tables, RLS, owner-scoped read policies,
+  column-specific profile/preferences updates, composite ownership foreign keys,
+  indexes, and automatic profile/settings provisioning for Auth users.
+- Vitest, in-memory PostgreSQL security tests, and Playwright browser checks.
 
-No Supabase project was provisioned automatically. No credentials are included.
-The app uses the publishable key with the user's cookie session, preserving RLS
-for future data operations. No service-role key is required for this phase.
+Future agent, file, task and approval tables are deliberately read-only to the
+`authenticated` role at this stage. Later migrations must add narrowly scoped
+operations together with authorization, validation, approval, and audit behavior.
+There is no general write or delete permission that bypasses those future controls.
 
-`APP_URL` reserves the canonical origin for future server-side auth redirects; no
-current feature reads it. `OPENAI_API_KEY` is documented but not used until Phase 3.
-Never prefix either an OpenAI key or a Supabase secret/service-role key with
-`NEXT_PUBLIC_`. Do not commit `.env.local` or paste secrets into source files.
-
-## Implemented code
+## Routes and code
 
 | Path | Purpose |
 | --- | --- |
-| `src/app/page.tsx` | Responsive setup screen with honest configuration state |
-| `src/components/ui/button.tsx` | Locally owned shadcn/ui button |
-| `src/components/connection-check.tsx` | On-demand connection probe with loading and error states |
-| `src/lib/env.ts` | Zod validation of public Supabase configuration |
-| `src/lib/supabase/client.ts` | Cookie-based browser Supabase client |
-| `src/lib/supabase/server.ts` | Per-request, server-only Supabase client |
-| `src/proxy.ts` | Verified token refresh and response cookie propagation |
-| `src/app/api/health/route.ts` | Bounded, read-only Supabase Auth connectivity check |
-| `supabase/migrations/` | Reserved migration directory for Phase 2 |
-| `tests/` | Vitest configuration tests and Playwright setup checks |
+| `/` | Setup instructions and phase roadmap |
+| `/login`, `/signup` | Account entry points |
+| `/forgot-password`, `/reset-password` | Request recovery and update password |
+| `/auth/confirm` | Validate email-link details; confirm with an explicit POST |
+| `/app` | Verified account, profile update and logout |
+| `/api/health` | Auth settings connectivity; does not verify data/storage readiness |
+| `src/app/auth/actions.ts` | Validated authentication and profile server actions |
+| `src/lib/auth/` | Input schemas, verified-user guard, canonical email origin |
+| `src/lib/supabase/`, `src/proxy.ts` | Session-aware clients and refresh |
+| `supabase/migrations/` | Version-controlled application schema |
+| `tests/database/` | Executable PostgreSQL ownership/security tests |
 
-The health endpoint is public and returns no credentials, user records, upstream
-bodies, or exception details. It has a four-second upstream timeout, disables
-caching, and makes no writes. The setup screen skips session refresh only when
-configuration is absent. It contains no private application routes or data.
+Confirmation targets are fixed: account confirmation goes to `/app`, recovery to
+`/reset-password`. Redirect query parameters are ignored. Confirmation uses a form
+so fetching a link alone does not consume its one-time token. Auth errors are
+sanitized; reset messages do not disclose whether an email is registered. Email
+origins come only from validated `APP_URL`. Server actions use Next.js origin checks
+and a 32KB body limit. Referrer suppression protects email-link query strings.
 
-Server Components cannot write cookies; the proxy handles token refresh.
-Future protected pages and mutation handlers must independently verify the user
-and enforce ownership. Session refresh alone is not an authorization boundary.
-Do not cache user-dependent responses.
-
-## Verification
+## Verify
 
 ```sh
 npm run lint
@@ -85,61 +85,36 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright starts an isolated development server on port 3100 with empty Supabase
-settings. Its two tests verify that the setup page loads, the button explains
-missing configuration, and `/api/health` returns an explicit uncached HTTP 503.
-The unit suite verifies configuration validation and credential-safe errors, plus
-health success, rejection and network failures using mocked upstream responses.
+PostgreSQL tests use PGlite **only as an in-memory development test dependency**.
+Application persistence always uses hosted Supabase PostgreSQL; no local app
+storage or SQLite is introduced. Tests bootstrap a minimal Auth schema to exercise
+the actual migration, grants, policies, constraints and triggers. They do not
+replace live Supabase Auth/email validation.
 
-For a real connection, configure `.env.local`, run `npm run dev`, then:
+Playwright runs on port 3100 with empty Supabase settings so it cannot contact or
+alter a real account. It checks setup behavior, account-page navigation, private
+route redirects and confirmation-link guards. Auth unit tests mock only Supabase
+network calls; database ownership tests execute SQL in PostgreSQL.
 
-```sh
-curl -i http://localhost:3000/api/health
-```
+[Verification results](VERIFICATION.md) distinguish passed checks from the live
+checks still awaiting a Supabase development project.
 
-Expected outcomes:
+## Deployment target and phase boundary
 
-- Missing/invalid configuration: HTTP 503, `status: not_configured`.
-- Valid project and accepted key: HTTP 200, `supabase: auth_reachable`.
-- Unreachable project, rejected key, or timeout: HTTP 503, `status: degraded`.
+The target is Vercel with Node.js 24 and standard Next.js hosting. Development and
+production must use separate Supabase projects. Store environment values in their
+corresponding Vercel environments; keep `APP_URL` server-side. Use supported Webpack
+build/dev scripts and Tailwind PostCSS. Deployment and deployed-domain checks remain
+Phase 8 work; no deployment has been performed.
 
-Production smoke check: `npm run build`, then `npm start`; verify the setup page
-and the same health responses. Without configured credentials, a 503 is expected.
+The remaining phases are chat/OpenAI (3), execution engine (4), Storage/task tools
+(5), approvals/audit/Realtime (6), complete dashboard (7), and deployed demonstration
+(8). Schema columns anticipate these phases; they do not implement their behavior.
 
-## Vercel readiness
+## References
 
-Deployment and deployed-domain verification belong to Phase 8. No deployment has
-been performed in Phase 1. The project uses supported Next.js Webpack build/start commands
-and a Node.js route handler, with `maxDuration = 10` for the health endpoint.
-
-When preparing Vercel, select this directory as the project root, the Next.js
-preset, and Node.js 24. Set `NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `APP_URL` for each environment.
-Preview/development must use a development Supabase project; production must use
-its own project. Redeploy after changing public variables. Configure exact Auth
-redirect URLs only once their handlers exist. Keep future OpenAI credentials in
-server-side environment variables.
-
-## Completion boundary and next phase
-
-Implemented: application scaffold, UI foundation, validated Supabase configuration,
-cookie-aware clients, refresh plumbing, connection probe, and test infrastructure.
-
-External verification pending: a real Supabase project and publishable settings
-must be supplied to prove connectivity. Database/storage persistence cannot yet
-be verified. See `VERIFICATION.md` for checks actually run on this delivery.
-
-Phase 2: email/password sign-up, login, logout, password reset, protected routes,
-version-controlled schema, foreign keys/indexes, and ownership RLS. Phase 3 adds
-chat and OpenAI; later phases add execution, tools, storage, approvals, audit logs,
-Realtime, the full dashboard, and deployed academic demonstration. No agent tool
-or destructive operation is exposed by this starter.
-
-The development and production build scripts explicitly use Webpack with Tailwind's
-PostCSS integration. This avoids a local Turbopack helper-process restriction.
-
-## Official references
-
-- https://nextjs.org/docs/app/getting-started/installation
-- https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs
-- https://ui.shadcn.com/docs/installation/next
+- [Next.js](https://nextjs.org/docs/app/getting-started/installation)
+- [Supabase cookie clients](https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs)
+- [Password authentication](https://supabase.com/docs/guides/auth/passwords)
+- [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [shadcn/ui](https://ui.shadcn.com/docs/installation/next)
