@@ -82,12 +82,13 @@ PGlite is only a development dependency for executable PostgreSQL tests.
   functions. Authenticated grants match the owner-scoped implementation.
 - Development logging adjusted to omit auth callback URLs and server-action inputs.
 
-OpenAI API key configuration and a real model call are pending. Provider integration
-was tested with mocked SDK calls only; no model usage or billing has been verified.
-The connected authenticated chat page loaded with its conversation UI and no
-database setup error. Its composer correctly remains disabled without an API key.
-The screenshot was inspected and no horizontal overflow was detected. Production
-dependency audit reported zero advisories.
+The user configured a restricted OpenAI key in the ignored local environment file.
+A real authenticated chat request to GPT-6 Luna returned “Chat connection works.”
+Both the prompt and reply remained visible after a full browser reload, confirming
+the live provider connection and conversation persistence. Billing totals were not
+inspected. The composer was also verified disabled before the key was configured.
+The initial screenshot was inspected and no horizontal overflow was detected.
+Production dependency audit reported zero advisories.
 Phase 3's configured per-user request caps do not constitute an aggregate monetary
 spending cap. No service-role credential or user OpenAI key has been committed.
 
