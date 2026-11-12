@@ -5,6 +5,8 @@ Next.js App Router + TypeScript, Supabase, Tailwind CSS and shadcn/ui.
 text chat are available. Tool execution remains Phase 4. See [chat setup](docs/phase-3.md)
 for server-side API configuration and verification.
 
+Public app: https://ai-workspace-agent.vercel.app
+
 ## Run locally
 
 Use Node.js 24 and npm. From this directory:
@@ -111,15 +113,19 @@ verified; see the project status in the setup guide.
 
 ## Deployment target and phase boundary
 
-The target is Vercel with Node.js 24 and standard Next.js hosting. Development and
-production must use separate Supabase projects. Store environment values in their
-corresponding Vercel environments; keep `APP_URL` server-side. Use supported Webpack
-build/dev scripts and Tailwind PostCSS. Deployment and deployed-domain checks remain
-Phase 8 work; no deployment has been performed.
+The app is deployed on Vercel Hobby with Node.js 24 and standard Next.js hosting,
+connected to this repository's `main` branch. See [deployment notes](docs/deployment.md).
+Prefer separate Supabase projects for development and production. For this demonstration,
+the owner explicitly chose to reuse the existing development project because the
+account's two free projects are already in use. Local and deployed app data therefore
+share the same database. Store environment values in their corresponding Vercel
+environments; keep `APP_URL` server-side. Use the Webpack build/dev scripts and
+Tailwind PostCSS.
 
 The remaining phases are execution engine (4), Storage/task tools
 (5), approvals/audit/Realtime (6), complete dashboard (7), and deployed demonstration
-(8). Schema columns anticipate these phases; they do not implement their behavior.
+(8, beyond the initial public deployment). Schema columns anticipate these phases;
+they do not implement their behavior.
 
 ## References
 

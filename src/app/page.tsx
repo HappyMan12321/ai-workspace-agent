@@ -3,12 +3,29 @@ import { connection } from "next/server";
 import { CheckCircle2, Circle, Layers3, ArrowUpRight } from "lucide-react";
 import { ConnectionCheck } from "@/components/connection-check";
 import { readSupabaseEnv } from "@/lib/env";
+import { Button } from "@/components/ui/button";
 
 const phases = ["Project foundation", "Authentication & data", "Chat & OpenAI", "Agent execution", "Files & tasks", "Approvals & live status", "Workspace dashboard", "Testing & deployment"];
 
 export default async function Home() {
   await connection();
   const configured = readSupabaseEnv().success;
+  if (configured) return <main className="mx-auto max-w-6xl px-6 py-8 md:py-12">
+    <header className="flex items-center justify-between gap-4 border-b border-border pb-6">
+      <Link href="/" className="flex items-center gap-3"><span className="rounded-xl bg-primary p-2.5 text-white"><Layers3 size={22} aria-hidden /></span><span className="font-semibold tracking-tight">AI Workspace Agent</span></Link>
+      <Link href="/login" className="text-sm font-medium text-primary underline underline-offset-4">Sign in</Link>
+    </header>
+    <section className="max-w-2xl space-y-6 py-20 md:py-28">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your private thinking space</p>
+      <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">Turn ideas into a clear next step.</h1>
+      <p className="max-w-xl text-lg leading-8 text-slate-600">Plan a project, untangle a question, or work through a draft with your AI workspace. Your conversations are saved so you can pick up where you left off.</p>
+      <div className="flex flex-wrap gap-3 pt-3"><Button asChild><Link href="/app/chat">Open workspace <ArrowUpRight size={16} aria-hidden /></Link></Button><Button asChild variant="outline"><Link href="/signup">Create account</Link></Button></div>
+    </section>
+    <section aria-label="Workspace features" className="grid gap-5 pb-16 md:grid-cols-3">
+      {[["Think it through", "Get explanations, explore options, and break a big idea into manageable steps."], ["Find the right words", "Brainstorm, outline, and refine a draft through conversation."], ["Keep your place", "Return to your saved conversations in a workspace private to your account."]].map(([title, detail]) => <div key={title} className="rounded-2xl border border-border bg-white p-6"><h2 className="mb-3 font-semibold">{title}</h2><p className="text-sm leading-7 text-slate-600">{detail}</p></div>)}
+    </section>
+    <footer className="border-t border-border pt-5 text-xs leading-6 text-slate-500">Text chat is available now. File access and task actions are coming later.</footer>
+  </main>;
   return <main className="mx-auto max-w-6xl px-6 py-8 md:py-12">
     <header className="flex items-center justify-between gap-4 border-b border-border pb-6">
       <div className="flex items-center gap-3"><span className="rounded-xl bg-primary p-2.5 text-white"><Layers3 size={22} aria-hidden /></span><span className="font-semibold tracking-tight">AI Workspace Agent</span></div>
